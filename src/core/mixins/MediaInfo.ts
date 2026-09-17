@@ -45,11 +45,13 @@ export default class MediaInfo {
   public streaming_data?: IStreamingData;
   public playability_status?: IPlayabilityStatus;
   public player_config?: IPlayerConfig;
+  public raw_response: Record<string, any>;
 
   constructor(data: [ ApiResponse, ApiResponse? ], actions: Actions, cpn: string) {
     this.#actions = actions;
 
     const info = Parser.parseResponse<IPlayerResponse>(data[0].data.playerResponse ? data[0].data.playerResponse : data[0].data);
+    this.raw_response = data[0].data.playerResponse ? data[0].data.playerResponse : data[0].data;
     const next = data[1]?.data ? Parser.parseResponse<INextResponse>(data[1].data) : undefined;
 
     this.#page = [ info, next ];

@@ -140,8 +140,12 @@ export default class Innertube {
           vis: 0,
           splay: false,
           lactMilliseconds: '-1',
-          signatureTimestamp: session.player?.signature_timestamp
-        }
+          signatureTimestamp: session.player?.signature_timestamp,
+          mutedAutoplay: true
+        },
+        // adPlaybackContext: {
+        //   pyv: true
+        // }
       },
       client: options?.client  
     };

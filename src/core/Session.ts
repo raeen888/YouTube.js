@@ -300,29 +300,38 @@ export default class Session extends EventEmitter {
   }
 
   static async create(options: SessionOptions = {}) {
-    const { context, api_key, api_version, account_index, config_data } = await Session.getSessionData(
-      options.lang,
-      options.location,
-      options.account_index,
-      options.visitor_data,
-      options.user_agent,
-      options.enable_safety_mode,
-      options.generate_session_locally,
-      options.fail_fast,
-      options.device_category,
-      options.client_type,
-      options.timezone,
-      options.fetch,
-      options.on_behalf_of_user,
-      options.cache,
-      options.enable_session_cache,
-      options.po_token,
-      options.retrieve_innertube_config
-    );
+    // getSessionData and Player.create are independent network operations
+    // (neither reads the other's result), so run them concurrently instead
+    // of serially to cut wall-clock session creation time roughly in half.
+    const [
+      { context, api_key, api_version, account_index, config_data },
+      player
+    ] = await Promise.all([
+      Session.getSessionData(
+        options.lang,
+        options.location,
+        options.account_index,
+        options.visitor_data,
+        options.user_agent,
+        options.enable_safety_mode,
+        options.generate_session_locally,
+        options.fail_fast,
+        options.device_category,
+        options.client_type,
+        options.timezone,
+        options.fetch,
+        options.on_behalf_of_user,
+        options.cache,
+        options.enable_session_cache,
+        options.po_token,
+        options.retrieve_innertube_config
+      ),
+      options.retrieve_player === false ? Promise.resolve(undefined) : Player.create(options.cache, options.fetch, options.po_token, options.player_id)
+    ]);
 
     return new Session(
       context, api_key, api_version, account_index, config_data,
-      options.retrieve_player === false ? undefined : await Player.create(options.cache, options.fetch, options.po_token, options.player_id),
+      player,
       options.cookie, options.fetch, options.cache, options.po_token
     );
   }
